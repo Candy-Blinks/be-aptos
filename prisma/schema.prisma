@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Collection {
+  collection_name        String
+  collection_owner       String
+  collection_description String
+  collection_uri         String
+  max_supply             Int
+  number_of_mints        Int
+  token_description      String
+  token_name             String
+  token_uri              String
+
+  @@id([collection_name, collection_owner]) // Composite primary key
+}
+
+model ProcessorStatus {
+  processor                  String  @id
+  last_success_version      BigInt
+  last_transaction_timestamp BigInt
+  last_updated              BigInt
+}
