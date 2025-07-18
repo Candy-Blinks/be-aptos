@@ -24,6 +24,7 @@ model Collection {
   token_description      String
   token_name             String
   token_uri              String
+  published              Boolean @default(false)
 
   @@id([collection_name, collection_owner]) // Composite primary key
 }

@@ -17,6 +17,7 @@ export interface Collection {
   token_description?: string;
   token_uri?: string;
   token_name?: string;
+  published?: boolean;
 }
 
 @Injectable()
@@ -70,6 +71,43 @@ export class CollectionsService {
       this.logger.error('Failed to fetch collection', error.stack);
       throw new InternalServerErrorException(
         `Failed to fetch collection: ${error.message}`,
+      );
+    }
+  }
+
+  async updatePublishedStatus(
+    owner: string,
+    name: string,
+    published: boolean,
+  ): Promise<Collection> {
+    this.logger.debug(
+      `Updating published status to ${published} for collection: ${name}, owner: ${owner}`,
+    );
+    try {
+      const updated = await this.prisma.collection.update({
+        where: {
+          collection_name_collection_owner: {
+            collection_owner: owner,
+            collection_name: name,
+          },
+        },
+        data: {
+          published,
+        },
+      });
+
+      return updated;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        // Record not found
+        throw new NotFoundException(
+          `Collection not found for owner: ${owner}, name: ${name}`,
+        );
+      }
+
+      this.logger.error('Failed to update published status', error.stack);
+      throw new InternalServerErrorException(
+        `Failed to update published status: ${error.message}`,
       );
     }
   }

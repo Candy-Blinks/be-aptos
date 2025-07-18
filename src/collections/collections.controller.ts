@@ -1,4 +1,13 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseBoolPipe,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { Collection } from './collections.service';
 import { CollectionsService } from './collections.service';
 
@@ -29,5 +38,18 @@ export class CollectionsController {
     }
 
     return await this.collectionService.getCollection(owner, name);
+  }
+
+  @Patch(':owner/:name/published')
+  async updatePublishedStatus(
+    @Param('owner') owner: string,
+    @Param('name') name: string,
+    @Body('published', ParseBoolPipe) published: boolean,
+  ): Promise<Collection> {
+    return await this.collectionService.updatePublishedStatus(
+      owner,
+      name,
+      published,
+    );
   }
 }
