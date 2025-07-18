@@ -83,6 +83,7 @@ export class CollectionsService {
     this.logger.debug(
       `Updating published status to ${published} for collection: ${name}, owner: ${owner}`,
     );
+    //TODO Add validation that only the owner can update the published status
     try {
       const updated = await this.prisma.collection.update({
         where: {
