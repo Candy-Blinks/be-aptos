@@ -1,60 +1,42 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
   Post,
-  Put,
+  Query,
+  UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDTO } from './dto/create-user-dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdatePointsDto } from './dto/update-points.dto';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 
 @Controller('users')
+@UseGuards(ApiKeyGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
   @Post()
-  create(@Body() createUserDTO: CreateUserDTO) {
-    // const newId = this.usersService.findAll().length + 1;
-    // const newUser = {
-    //   id: newId,
-    //   name: 'John Doe',
-    //   username: 'momo',
-    //   aptos_wallet_address: '0xblinks',
-    // };
-    return this.usersService.create(createUserDTO);
+  async create(@Body(ValidationPipe) createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
   @Get()
-  findAll() {
-    try {
-      return this.usersService.findAll();
-    } catch (e) {
-      throw new HttpException(
-        'Error fetching users',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        {
-          cause: e,
-        },
-      );
+  async findByAptosAddress(@Query('aptos_address') aptosAddress: string) {
+    if (!aptosAddress) {
+      throw new Error('aptos_address query parameter is required');
     }
+    return this.usersService.findByAptosAddress(aptosAddress);
   }
 
-  @Post(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  @Post('increment-points')
+  async incrementPoints(@Body(ValidationPipe) updatePointsDto: UpdatePointsDto) {
+    return this.usersService.incrementPoints(updatePointsDto);
   }
 
-  @Put(':id')
-  update() {
-    return 'Update user';
-  }
-
-  @Delete(':id')
-  delete() {
-    return 'Deletes user';
+  @Post('decrement-points')
+  async decrementPoints(@Body(ValidationPipe) updatePointsDto: UpdatePointsDto) {
+    return this.usersService.decrementPoints(updatePointsDto);
   }
 }

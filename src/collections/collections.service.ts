@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 export interface Collection {
   collection_name: string;
@@ -24,7 +24,7 @@ export interface Collection {
 export class CollectionsService {
   private readonly logger = new Logger(CollectionsService.name);
 
-  constructor(private prisma: PrismaClient) {} // Injected globally
+  constructor(private prisma: PrismaService) {}
 
   async getOwnedCollections(owner: string): Promise<Collection[]> {
     this.logger.debug(`Fetching collections for owner: ${owner}`);

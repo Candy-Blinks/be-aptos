@@ -1,21 +1,10 @@
 // src/prisma/prisma.module.ts
-import { Global, Module, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { Global, Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
 
-@Global() // Makes this module available globally
+@Global()
 @Module({
-  providers: [PrismaClient],
-  exports: [PrismaClient], // Allows any service to inject PrismaClient
+  providers: [PrismaService],
+  exports: [PrismaService],
 })
-export class PrismaModule
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
-  async onModuleInit() {
-    await this.$connect(); // Connect to DB on startup
-  }
-
-  async onModuleDestroy() {
-    await this.$disconnect(); // Close connection on shutdown
-  }
-}
+export class PrismaModule {}

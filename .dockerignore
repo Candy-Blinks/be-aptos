@@ -1,0 +1,42 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+.env
+.env.*
+.nyc_output
+coverage
+.coverage
+.cache
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Test files
+test
+tests
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history 
