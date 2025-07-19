@@ -14,6 +14,132 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  aptos_address  String   @unique
+  display_name   String
+  header_url     String?
+  profile_url    String?
+  bio            String?
+  activity_points Int     @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  socials        Json     @default("{\"website\": \"\", \"x\": \"\", \"tiktok\": \"\", \"linkedin\": \"\", \"youtube\": \"\", \"instagram\": \"\", \"facebook\": \"\"}")
+
+  // Relations
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  shares        Share[]
+  followers     Follower[] @relation("UserFollowers")
+  following     Follower[] @relation("UserFollowing")
+  access_logs   AccessLog[]
+  error_logs    ErrorLog[]
+}
+
+model Post {
+  id            String   @id @default(cuid())
+  user_id       String
+  content       String
+  media_urls    Json     @default("[]")
+  like_count    Int      @default(0)
+  comment_count Int      @default(0)
+  share_count   Int      @default(0)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  likes         Like[]
+  shares        Share[]
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  post_id    String
+  user_id    String
+  content    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  post       Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  post_id    String
+  user_id    String
+  created_at DateTime @default(now())
+
+  // Relations
+  post       Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, user_id])
+}
+
+model Follower {
+  follower_id  String
+  following_id String
+  created_at   DateTime @default(now())
+
+  // Relations
+  follower     User @relation("UserFollowers", fields: [follower_id], references: [id], onDelete: Cascade)
+  following    User @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
+
+  @@id([follower_id, following_id])
+}
+
+model Share {
+  id         String   @id @default(cuid())
+  post_id    String
+  user_id    String
+  created_at DateTime @default(now())
+
+  // Relations
+  post       Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, user_id])
+}
+
+model AccessLog {
+  id            String   @id @default(cuid())
+  user_id       String?
+  username      String?
+  aptos_address String?
+  ip_address    String
+  endpoint      String
+  method        String
+  status        Int
+  request_body  Json?
+  response_body Json?
+  created_at    DateTime @default(now())
+
+  // Relations
+  user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+}
+
+model ErrorLog {
+  id            String   @id @default(cuid())
+  user_id       String?
+  username      String?
+  aptos_address String?
+  ip_address    String
+  endpoint      String
+  method        String
+  error_message String
+  stack_trace   String?
+  created_at    DateTime @default(now())
+
+  // Relations
+  user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+}
+
 model Collection {
   collection_name        String
   collection_owner       String
