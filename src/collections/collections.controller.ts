@@ -52,4 +52,9 @@ export class CollectionsController {
       published,
     );
   }
+
+  @Get('collections')
+  async getCollections(): Promise<Collection[]> {
+    return this.collectionService.getCollections();
+  }
 }
