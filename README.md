@@ -18,12 +18,6 @@ A production-ready NestJS backend for a Twitter/X.com-like social media platform
 - **CORS Protection**: Environment-based origin restrictions
 - **Rate Limiting**: Configurable request throttling
 
-### Logging & Monitoring
-- **Access Logging**: Log all API requests to database
-- **Error Logging**: Comprehensive error tracking with stack traces
-- **Database Logging**: Track all database operations via Prisma middleware
-- **Admin Dashboard**: JWT-protected endpoints to view logs
-
 ### Scalability & Performance
 - **Redis Caching**: Redis integration for caching and pub/sub
 - **Database**: PostgreSQL with Prisma ORM using CUIDs
@@ -147,8 +141,6 @@ pnpm start:prod
 - `POST /api/posts/:id/like` - Toggle like on post (requires API key)
 
 ### Admin (JWT Protected)
-- `GET /api/admin/access-logs` - Get access logs with filters (requires JWT)
-- `GET /api/admin/error-logs` - Get error logs with filters (requires JWT)
 - `GET /api/admin/stats` - Get system statistics (requires JWT)
 
 ### Health Check
@@ -192,8 +184,6 @@ socket.on('post_liked', (data) => {
 - **Like**: Post likes with unique constraints
 - **Follower**: User follow relationships
 - **Share**: Post shares
-- **AccessLog**: API request logging
-- **ErrorLog**: Error tracking
 - **Collection**: NFT collection data
 - **ProcessorStatus**: Blockchain processing status
 
@@ -251,12 +241,6 @@ pnpm test:cov
 - Development: Uses `.env` file
 - Production: Set environment variables in deployment platform
 - Docker: Uses `docker-compose.yml` environment section
-
-### Logging
-- All API requests are logged to `AccessLog` table
-- Errors are logged to `ErrorLog` table
-- Database operations are logged via Prisma middleware
-- Admin can view logs via `/api/admin/access-logs` and `/api/admin/error-logs`
 
 ## 🚀 Future Enhancements
 

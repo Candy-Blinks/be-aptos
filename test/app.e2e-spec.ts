@@ -116,7 +116,7 @@ describe('Social Media API (e2e)', () => {
   });
 
   describe('Users API', () => {
-    const apiHeaders = { 'X-API-KEY': 'test-api-key' };
+    const apiHeaders = { 'CB-API-KEY': 'test-api-key' };
 
     describe('/api/users (POST)', () => {
       it('should create a new user with valid data', async () => {
@@ -329,7 +329,7 @@ describe('Social Media API (e2e)', () => {
   });
 
   describe('Posts API', () => {
-    const apiHeaders = { 'X-API-KEY': 'test-api-key' };
+    const apiHeaders = { 'CB-API-KEY': 'test-api-key' };
 
     beforeEach(async () => {
       const testUser = await prismaService.user.create({
