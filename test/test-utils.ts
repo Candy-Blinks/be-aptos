@@ -69,14 +69,21 @@ export class TestUtils {
   static createMockJwtService() {
     return {
       sign: jest.fn(() => 'mock-jwt-token'),
-      verify: jest.fn(() => ({ aptosAddress: 'test-address', userId: 'test-user-id' })),
+      verify: jest.fn(() => ({
+        aptosAddress: 'test-address',
+        userId: 'test-user-id',
+      })),
     };
   }
 
   static createMockFilesService() {
     return {
-      uploadImage: jest.fn(() => Promise.resolve('https://mock-cloudinary-url.com/image.jpg')),
-      uploadMultipleImages: jest.fn(() => Promise.resolve(['https://mock-cloudinary-url.com/image1.jpg'])),
+      uploadImage: jest.fn(() =>
+        Promise.resolve('https://mock-cloudinary-url.com/image.jpg'),
+      ),
+      uploadMultipleImages: jest.fn(() =>
+        Promise.resolve(['https://mock-cloudinary-url.com/image1.jpg']),
+      ),
       deleteImage: jest.fn(() => Promise.resolve()),
       extractPublicId: jest.fn(() => 'mock-public-id'),
     };
@@ -130,13 +137,16 @@ export class TestUtils {
 
   static async generateValidApiHeaders(): Promise<Record<string, string>> {
     return {
-      'X-API-KEY': 'test-api-key',
+      'CB-API-KEY': 'test-api-key',
       'Content-Type': 'application/json',
     };
   }
 
-  static async generateValidJwtHeaders(jwtService?: JwtService): Promise<Record<string, string>> {
-    const token = jwtService?.sign({ aptosAddress: 'test-address' }) || 'mock-jwt-token';
+  static async generateValidJwtHeaders(
+    jwtService?: JwtService,
+  ): Promise<Record<string, string>> {
+    const token =
+      jwtService?.sign({ aptosAddress: 'test-address' }) || 'mock-jwt-token';
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -161,10 +171,16 @@ export class TestUtils {
   static async cleanupTestData(prisma: PrismaService) {
     // Clean up test data in reverse dependency order
     await prisma.like.deleteMany({ where: { user_id: { contains: 'test-' } } });
-    await prisma.comment.deleteMany({ where: { user_id: { contains: 'test-' } } });
-    await prisma.share.deleteMany({ where: { user_id: { contains: 'test-' } } });
-    await prisma.follower.deleteMany({ where: { follower_id: { contains: 'test-' } } });
+    await prisma.comment.deleteMany({
+      where: { user_id: { contains: 'test-' } },
+    });
+    await prisma.share.deleteMany({
+      where: { user_id: { contains: 'test-' } },
+    });
+    await prisma.follower.deleteMany({
+      where: { follower_id: { contains: 'test-' } },
+    });
     await prisma.post.deleteMany({ where: { user_id: { contains: 'test-' } } });
     await prisma.user.deleteMany({ where: { id: { contains: 'test-' } } });
   }
-} 
+}

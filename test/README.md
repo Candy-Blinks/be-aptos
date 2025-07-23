@@ -125,7 +125,7 @@ ADMIN_PASSWORD=test-admin-password
 #### 1. Create User
 ```bash
 curl -X POST http://localhost:3000/api/users \
-  -H "X-API-KEY: dev-api-key-12345" \
+  -H "CB-API-KEY: dev-api-key-12345" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "testuser123",
@@ -137,13 +137,13 @@ curl -X POST http://localhost:3000/api/users \
 #### 2. Get User
 ```bash
 curl -X GET "http://localhost:3000/api/users?aptos_address=test-address-123" \
-  -H "X-API-KEY: dev-api-key-12345"
+  -H "CB-API-KEY: dev-api-key-12345"
 ```
 
 #### 3. Create Post
 ```bash
 curl -X POST http://localhost:3000/api/posts \
-  -H "X-API-KEY: dev-api-key-12345" \
+  -H "CB-API-KEY: dev-api-key-12345" \
   -H "Content-Type: application/json" \
   -d '{
     "aptos_address": "test-address-123",
@@ -178,7 +178,7 @@ curl -X GET http://localhost:3000/api/admin/stats \
 2. **Pre-request Scripts** (for auth endpoints):
    ```javascript
    pm.request.headers.add({
-     key: 'X-API-KEY',
+     key: 'CB-API-KEY',
      value: pm.environment.get('api_key')
    });
    ```
@@ -234,7 +234,7 @@ curl -X POST http://localhost:3000/api/users \
 
 # Invalid API key (401)  
 curl -X POST http://localhost:3000/api/users \
-  -H "X-API-KEY: invalid-key" \
+  -H "CB-API-KEY: invalid-key" \
   -H "Content-Type: application/json" \
   -d '{"username": "test"}'
 ```
@@ -243,7 +243,7 @@ curl -X POST http://localhost:3000/api/users \
 ```bash
 # Username too short (400)
 curl -X POST http://localhost:3000/api/users \
-  -H "X-API-KEY: dev-api-key-12345" \
+  -H "CB-API-KEY: dev-api-key-12345" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "ab",
@@ -256,12 +256,12 @@ curl -X POST http://localhost:3000/api/users \
 ```bash
 # Create user twice with same username
 curl -X POST http://localhost:3000/api/users \
-  -H "X-API-KEY: dev-api-key-12345" \
+  -H "CB-API-KEY: dev-api-key-12345" \
   -H "Content-Type: application/json" \
   -d '{"username": "duplicate", "aptos_address": "addr1", "display_name": "User 1"}'
 
 curl -X POST http://localhost:3000/api/users \
-  -H "X-API-KEY: dev-api-key-12345" \
+  -H "CB-API-KEY: dev-api-key-12345" \
   -H "Content-Type: application/json" \
   -d '{"username": "duplicate", "aptos_address": "addr2", "display_name": "User 2"}'
 ```
@@ -306,7 +306,7 @@ npm install -g autocannon
 
 # Test user creation endpoint
 autocannon -c 10 -d 30 -m POST \
-  -H "X-API-KEY: dev-api-key-12345" \
+  -H "CB-API-KEY: dev-api-key-12345" \
   -H "Content-Type: application/json" \
   -b '{"username":"load-test-user","aptos_address":"load-test-addr","display_name":"Load Test"}' \
   http://localhost:3000/api/users
