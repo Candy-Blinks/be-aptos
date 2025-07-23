@@ -161,9 +161,9 @@ curl -X POST http://localhost:3000/api/auth/login \
   }'
 ```
 
-#### 5. Get Admin Logs (with JWT)
+#### 5. Get Admin Stats (with JWT)
 ```bash
-curl -X GET http://localhost:3000/api/admin/access-logs \
+curl -X GET http://localhost:3000/api/admin/stats \
   -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
 ```
 
