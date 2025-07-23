@@ -37,14 +37,6 @@ export class TestUtils {
         delete: jest.fn(),
         findMany: jest.fn(),
       },
-      accessLog: {
-        create: jest.fn(),
-        findMany: jest.fn(),
-      },
-      errorLog: {
-        create: jest.fn(),
-        findMany: jest.fn(),
-      },
       collection: {
         create: jest.fn(),
         findMany: jest.fn(),
@@ -53,8 +45,6 @@ export class TestUtils {
       $transaction: jest.fn(),
       $connect: jest.fn(),
       $disconnect: jest.fn(),
-      setUserContext: jest.fn(),
-      clearUserContext: jest.fn(),
     };
   }
 
@@ -176,7 +166,5 @@ export class TestUtils {
     await prisma.follower.deleteMany({ where: { follower_id: { contains: 'test-' } } });
     await prisma.post.deleteMany({ where: { user_id: { contains: 'test-' } } });
     await prisma.user.deleteMany({ where: { id: { contains: 'test-' } } });
-    await prisma.accessLog.deleteMany({ where: { user_id: { contains: 'test-' } } });
-    await prisma.errorLog.deleteMany({ where: { user_id: { contains: 'test-' } } });
   }
 } 

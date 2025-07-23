@@ -9,9 +9,7 @@ import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { AdminModule } from './admin/admin.module';
 import { FilesModule } from './files/files.module';
-import { LoggingModule } from './logging/logging.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { LoggingMiddleware } from './logging/logging.middleware';
 import { CollectionsController } from './collections/collections.controller';
 import { CollectionsService } from './collections/collections.service';
 
@@ -38,7 +36,6 @@ import { CollectionsService } from './collections/collections.service';
     PostsModule,
     AdminModule,
     FilesModule,
-    LoggingModule,
     NotificationsModule,
   ],
   controllers: [AppController, CollectionsController],
@@ -46,7 +43,6 @@ import { CollectionsService } from './collections/collections.service';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // Apply logging middleware to all routes
-    consumer.apply(LoggingMiddleware).forRoutes('*');
+    // No middleware configuration needed
   }
 }

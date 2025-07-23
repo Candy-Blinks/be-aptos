@@ -34,8 +34,6 @@ model User {
   shares        Share[]
   followers     Follower[] @relation("UserFollowers")
   following     Follower[] @relation("UserFollowing")
-  access_logs   AccessLog[]
-  error_logs    ErrorLog[]
 }
 
 model Post {
@@ -105,39 +103,6 @@ model Share {
   user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([post_id, user_id])
-}
-
-model AccessLog {
-  id            String   @id @default(cuid())
-  user_id       String?
-  username      String?
-  aptos_address String?
-  ip_address    String
-  endpoint      String
-  method        String
-  status        Int
-  request_body  Json?
-  response_body Json?
-  created_at    DateTime @default(now())
-
-  // Relations
-  user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
-}
-
-model ErrorLog {
-  id            String   @id @default(cuid())
-  user_id       String?
-  username      String?
-  aptos_address String?
-  ip_address    String
-  endpoint      String
-  method        String
-  error_message String
-  stack_trace   String?
-  created_at    DateTime @default(now())
-
-  // Relations
-  user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 }
 
 model Collection {

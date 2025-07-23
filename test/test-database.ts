@@ -43,8 +43,6 @@ export class TestDatabase {
       await this.prisma.$executeRaw`TRUNCATE TABLE "Post" CASCADE;`;
       await this.prisma.$executeRaw`TRUNCATE TABLE "User" CASCADE;`;
       await this.prisma.$executeRaw`TRUNCATE TABLE "Collection" CASCADE;`;
-      await this.prisma.$executeRaw`TRUNCATE TABLE "AccessLog" CASCADE;`;
-      await this.prisma.$executeRaw`TRUNCATE TABLE "ErrorLog" CASCADE;`;
       await this.prisma.$executeRaw`TRUNCATE TABLE "ProcessorStatus" CASCADE;`;
     } catch (error) {
       console.error('Failed to cleanup test database:', error);
