@@ -30,4 +30,9 @@ export class CollectionsController {
 
     return await this.collectionService.getCollection(owner, name);
   }
+
+  @Get('collections')
+  async getCollections(): Promise<Collection[]> {
+    return this.collectionService.getCollections();
+  }
 }
