@@ -34,7 +34,7 @@ describe('UsersService', () => {
       username: 'testuser',
       aptos_address: 'test-aptos-address',
       display_name: 'Test User',
-      bio: 'Test bio',
+      profile_url: 'https://example.com/profile.jpg',
     };
 
     it('should create a user successfully', async () => {

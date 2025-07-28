@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, MinLength, IsOptional, IsObject } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsEmail,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -14,9 +20,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   display_name: string;
 
-  @IsString()
+  @IsEmail()
   @IsOptional()
-  header_url?: string;
+  email?: string;
 
   @IsString()
   @IsOptional()
@@ -24,17 +30,5 @@ export class CreateUserDto {
 
   @IsString()
   @IsOptional()
-  bio?: string;
-
-  @IsObject()
-  @IsOptional()
-  socials?: {
-    website?: string;
-    x?: string;
-    tiktok?: string;
-    linkedin?: string;
-    youtube?: string;
-    instagram?: string;
-    facebook?: string;
-  };
-} 
+  referral_code?: string; // The referral code of the person who referred this user
+}
