@@ -97,7 +97,7 @@ export class TestUtils {
     };
   }
 
-  static createMockUser(): User {
+  static createMockUser(overrides?: Partial<any>) {
     return {
       id: 'test-user-id',
       username: 'testuser',
@@ -107,6 +107,9 @@ export class TestUtils {
       profile_url: null,
       bio: null,
       activity_points: 0,
+      referral_code: 'test-referral-code',
+      referred_by: null,
+      referral_count: 0,
       created_at: new Date(),
       updated_at: new Date(),
       socials: {
@@ -118,6 +121,7 @@ export class TestUtils {
         instagram: '',
         facebook: '',
       },
+      ...overrides,
     };
   }
 
