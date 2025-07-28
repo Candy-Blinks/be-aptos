@@ -17,7 +17,20 @@ export class FilesService {
     folder: string = 'posts',
   ): Promise<string> {
     try {
-      const result = await cloudinary.uploader.upload(file.path || file.buffer.toString('base64'), {
+      let uploadSource: string;
+
+      // Handle different file sources
+      if (file.path) {
+        // File uploaded to disk (has file path)
+        uploadSource = file.path;
+      } else if (file.buffer) {
+        // File uploaded to memory (has buffer) - convert to data URI
+        uploadSource = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+      } else {
+        throw new Error('No file data available');
+      }
+
+      const result = await cloudinary.uploader.upload(uploadSource, {
         folder: `social-media/${folder}`,
         resource_type: 'image',
         format: 'webp',
@@ -27,7 +40,10 @@ export class FilesService {
 
       return result.secure_url;
     } catch (error) {
-      throw new Error(`Failed to upload image to Cloudinary: ${error.message}`);
+      console.log('Cloudinary upload error:', error);
+      throw new Error(
+        `Failed to upload image to Cloudinary: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -41,7 +57,9 @@ export class FilesService {
       );
       return await Promise.all(uploadPromises);
     } catch (error) {
-      throw new Error(`Failed to upload images: ${error.message}`);
+      throw new Error(
+        `Failed to upload images: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -49,7 +67,9 @@ export class FilesService {
     try {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      throw new Error(`Failed to delete image: ${error.message}`);
+      throw new Error(
+        `Failed to delete image: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -59,4 +79,4 @@ export class FilesService {
     const fileName = parts[parts.length - 1];
     return fileName.split('.')[0];
   }
-} 
+}
