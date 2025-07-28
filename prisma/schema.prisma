@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,42 +8,48 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  username       String   @unique
-  aptos_address  String   @unique
-  display_name   String
-  header_url     String?
-  profile_url    String?
-  bio            String?
-  activity_points Int     @default(0)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  socials        Json     @default("{\"website\": \"\", \"x\": \"\", \"tiktok\": \"\", \"linkedin\": \"\", \"youtube\": \"\", \"instagram\": \"\", \"facebook\": \"\"}")
-
+  id              String     @id @default(cuid())
+  username        String     @unique
+  aptos_address   String     @unique
+  display_name    String
+  email           String?    @unique
+  header_url      String?
+  profile_url     String?
+  bio             String?
+  activity_points Int        @default(0)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  socials         Json       @default("{\"x\": \"\", \"tiktok\": \"\", \"website\": \"\", \"youtube\": \"\", \"facebook\": \"\", \"linkedin\": \"\", \"instagram\": \"\"}")
+  
   // Relations
-  posts         Post[]
-  comments      Comment[]
-  likes         Like[]
-  shares        Share[]
-  followers     Follower[] @relation("UserFollowers")
-  following     Follower[] @relation("UserFollowing")
+  referral_code   String     @unique @default(cuid())
+  referral_count  Int        @default(0)
+  referred_by     String?
+  comments        Comment[]
+  followers       Follower[] @relation("UserFollowers")
+  following       Follower[] @relation("UserFollowing")
+  likes           Like[]
+  posts           Post[]
+  shares          Share[]
+  referrer        User?      @relation("UserReferrals", fields: [referred_by], references: [referral_code])
+  referrals       User[]     @relation("UserReferrals")
 }
 
 model Post {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   user_id       String
   content       String
-  media_urls    Json     @default("[]")
-  like_count    Int      @default(0)
-  comment_count Int      @default(0)
-  share_count   Int      @default(0)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
+  media_urls    Json      @default("[]")
+  like_count    Int       @default(0)
+  comment_count Int       @default(0)
+  share_count   Int       @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
   // Relations
-  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   comments      Comment[]
   likes         Like[]
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   shares        Share[]
 }
 
@@ -63,8 +62,8 @@ model Comment {
   updated_at DateTime @updatedAt
 
   // Relations
-  post       Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Like {
@@ -72,10 +71,10 @@ model Like {
   post_id    String
   user_id    String
   created_at DateTime @default(now())
-
+  
   // Relations
-  post       Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([post_id, user_id])
 }
@@ -86,8 +85,8 @@ model Follower {
   created_at   DateTime @default(now())
 
   // Relations
-  follower     User @relation("UserFollowers", fields: [follower_id], references: [id], onDelete: Cascade)
-  following    User @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
+  follower     User     @relation("UserFollowers", fields: [follower_id], references: [id], onDelete: Cascade)
+  following    User     @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
 
   @@id([follower_id, following_id])
 }
@@ -97,10 +96,10 @@ model Share {
   post_id    String
   user_id    String
   created_at DateTime @default(now())
-
+  
   // Relations
-  post       Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([post_id, user_id])
 }
@@ -117,12 +116,12 @@ model Collection {
   token_uri              String
   published              Boolean @default(false)
 
-  @@id([collection_name, collection_owner]) // Composite primary key
+  @@id([collection_name, collection_owner])
 }
 
 model ProcessorStatus {
-  processor                  String  @id
-  last_success_version      BigInt
+  processor                  String @id
+  last_success_version       BigInt
   last_transaction_timestamp BigInt
-  last_updated              BigInt
+  last_updated               BigInt
 }

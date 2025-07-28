@@ -1,6 +1,7 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { MulterModule } from '@nestjs/platform-express';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -19,6 +20,14 @@ import { CollectionsService } from './collections/collections.service';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
+    }),
+
+    // File upload configuration
+    MulterModule.register({
+      storage: 'memory', // Store files in memory as buffers
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+      },
     }),
 
     // Rate limiting
@@ -42,7 +51,7 @@ import { CollectionsService } from './collections/collections.service';
   providers: [AppService, CollectionsService],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
+  configure(_consumer: MiddlewareConsumer) {
     // No middleware configuration needed
   }
 }
