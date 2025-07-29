@@ -8,49 +8,62 @@ datasource db {
 }
 
 model User {
-  id              String     @id @default(cuid())
-  username        String     @unique
-  aptos_address   String     @unique
-  display_name    String
-  email           String?    @unique
-  header_url      String?
-  profile_url     String?
-  bio             String?
-  activity_points Int        @default(0)
-  created_at      DateTime   @default(now())
-  updated_at      DateTime   @updatedAt
-  socials         Json       @default("{\"x\": \"\", \"tiktok\": \"\", \"website\": \"\", \"youtube\": \"\", \"facebook\": \"\", \"linkedin\": \"\", \"instagram\": \"\"}")
-  
+  id                   String   @id @default(cuid())
+  username             String   @unique
+  aptos_address        String   @unique
+  display_name         String
+  email                String?  @unique
+  header_url           String?
+  profile_url          String?
+  bio                  String?
+  activity_points      Int      @default(0)
+  role                 String   @default("user")
+  is_new_user          Boolean  @default(true)
+  onboarding_completed Boolean  @default(false)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  socials              Json     @default("{\"x\": \"\", \"tiktok\": \"\", \"website\": \"\", \"youtube\": \"\", \"facebook\": \"\", \"linkedin\": \"\", \"instagram\": \"\"}")
+
   // Relations
-  referral_code   String     @unique @default(cuid())
-  referral_count  Int        @default(0)
-  referred_by     String?
-  comments        Comment[]
-  followers       Follower[] @relation("UserFollowers")
-  following       Follower[] @relation("UserFollowing")
-  likes           Like[]
-  posts           Post[]
-  shares          Share[]
-  referrer        User?      @relation("UserReferrals", fields: [referred_by], references: [referral_code])
-  referrals       User[]     @relation("UserReferrals")
+  referral_code  String     @unique @default(cuid())
+  referral_count Int        @default(0)
+  referred_by    String?
+  comments       Comment[]
+  followers      Follower[] @relation("UserFollowers")
+  following      Follower[] @relation("UserFollowing")
+  likes          Like[]
+  posts          Post[]
+  shares         Share[]
+  referrer       User?      @relation("UserReferrals", fields: [referred_by], references: [referral_code])
+  referrals      User[]     @relation("UserReferrals")
 }
 
 model Post {
-  id            String    @id @default(cuid())
-  user_id       String
-  content       String
-  media_urls    Json      @default("[]")
-  like_count    Int       @default(0)
-  comment_count Int       @default(0)
-  share_count   Int       @default(0)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  
+  id             String   @id @default(cuid())
+  user_id        String
+  content        String?
+  media_urls     Json     @default("[]")
+  has_blink      Boolean  @default(false)
+  collection_uri String?
+  like_count     Int      @default(0)
+  comment_count  Int      @default(0)
+  share_count    Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Share properties
+  has_shared_post Boolean @default(false)
+  shared_post_id  String?
+
   // Relations
-  comments      Comment[]
-  likes         Like[]
-  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  shares        Share[]
+  comments Comment[]
+  likes    Like[]
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  shares   Share[]
+
+  // Self-relation for shared posts
+  original_post Post?  @relation("PostShares", fields: [shared_post_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reposts       Post[] @relation("PostShares")
 }
 
 model Comment {
@@ -62,8 +75,8 @@ model Comment {
   updated_at DateTime @updatedAt
 
   // Relations
-  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Like {
@@ -71,10 +84,10 @@ model Like {
   post_id    String
   user_id    String
   created_at DateTime @default(now())
-  
+
   // Relations
-  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([post_id, user_id])
 }
@@ -85,8 +98,8 @@ model Follower {
   created_at   DateTime @default(now())
 
   // Relations
-  follower     User     @relation("UserFollowers", fields: [follower_id], references: [id], onDelete: Cascade)
-  following    User     @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
+  follower  User @relation("UserFollowers", fields: [follower_id], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
 
   @@id([follower_id, following_id])
 }
@@ -96,10 +109,10 @@ model Share {
   post_id    String
   user_id    String
   created_at DateTime @default(now())
-  
+
   // Relations
-  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([post_id, user_id])
 }
