@@ -13,6 +13,7 @@ import { FilesModule } from './files/files.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CollectionsController } from './collections/collections.controller';
 import { CollectionsService } from './collections/collections.service';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { CollectionsService } from './collections/collections.service';
     AdminModule,
     FilesModule,
     NotificationsModule,
+    CommentsModule,
   ],
   controllers: [AppController, CollectionsController],
   providers: [AppService, CollectionsService],

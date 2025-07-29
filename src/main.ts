@@ -132,12 +132,38 @@ async function bootstrap() {
   });
 
   const port = configService.get<number>('PORT', 3000);
-  await app.listen(port);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
-  console.log(`🌍 Environment: ${nodeEnv}`);
-  console.log(`🔒 CORS Origins: ${allowedOrigins.join(', ')}`);
+  const startServer = async (retryCount = 0) => {
+    try {
+      await app.listen(port);
+      logger.log(`🚀 Application is running on: http://localhost:${port}`);
+      logger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+      logger.log(`🌍 Environment: ${nodeEnv}`);
+      logger.log(`🔒 CORS Origins: ${allowedOrigins.join(', ')}`);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        error.code === 'EADDRINUSE' &&
+        retryCount < 5
+      ) {
+        logger.warn(
+          `Port ${port} is busy. Retrying in 5 seconds... (${
+            retryCount + 1
+          }/5)`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await startServer(retryCount + 1);
+      } else {
+        const message = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : '';
+        logger.error(`Failed to start server: ${message}`, stack);
+        process.exit(1);
+      }
+    }
+  };
+
+  await startServer();
 }
 
 void bootstrap();
