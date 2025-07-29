@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 // Global error handling to prevent crashes
 const logger = new Logger('Main');
@@ -29,6 +30,7 @@ process.on('uncaughtException', (error) => {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
   // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
@@ -68,13 +70,56 @@ async function bootstrap() {
       // Reject origin
       callback(new Error('Not allowed by CORS'));
     },
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
     optionsSuccessStatus: 200,
   });
 
   // Global prefix for API routes
   app.setGlobalPrefix('api');
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('CandyBlinks Backend API')
+    .setDescription(
+      'A production-ready backend for CandyBlinks socialfi platform',
+    )
+    .setVersion('1.0')
+    .addTag('users', 'User management endpoints')
+    .addTag('posts', 'Post management endpoints')
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('admin', 'Admin-only endpoints')
+    .addTag('files', 'File upload endpoints')
+    .addTag('collections', 'NFT collections endpoints')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'CB-API-KEY',
+        in: 'header',
+        description: 'API key for non-admin endpoints',
+      },
+      'api-key',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+    customSiteTitle: 'CandyBlinks API Documentation',
+  });
 
   // Health check endpoint
   app.getHttpAdapter().get('/health', (req: any, res: any) => {
@@ -90,6 +135,7 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`🚀 Application is running on: http://localhost:${port}`);
+  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
   console.log(`🌍 Environment: ${nodeEnv}`);
   console.log(`🔒 CORS Origins: ${allowedOrigins.join(', ')}`);
 }

@@ -19,13 +19,32 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePointsDto } from './dto/update-points.dto';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiParam,
+  ApiConsumes,
+  ApiBody,
+  ApiSecurity,
+} from '@nestjs/swagger';
 
+@ApiTags('users')
 @Controller('users')
 @UseGuards(ApiKeyGuard)
+@ApiSecurity('api-key')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get('check-username')
+  @ApiOperation({ summary: 'Check if username is available' })
+  @ApiQuery({
+    name: 'username',
+    description: 'Username to check',
+    example: 'johndoe',
+  })
+  @ApiResponse({ status: 200, description: 'Username availability status' })
   async checkUsernameAvailability(@Query('username') username: string) {
     if (!username) {
       throw new Error('Username query parameter is required');
@@ -35,6 +54,17 @@ export class UsersController {
   }
 
   @Get('check-aptos-address')
+  @ApiOperation({ summary: 'Check if Aptos address is available' })
+  @ApiQuery({
+    name: 'aptos_address',
+    description: 'Aptos address to check',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Aptos address availability status',
+  })
   async checkAptosAddressAvailability(
     @Query('aptos_address') aptosAddress: string,
   ) {
@@ -46,6 +76,21 @@ export class UsersController {
   }
 
   @Get('check-availability')
+  @ApiOperation({
+    summary: 'Check if username and Aptos address are available',
+  })
+  @ApiQuery({
+    name: 'username',
+    description: 'Username to check',
+    example: 'johndoe',
+  })
+  @ApiQuery({
+    name: 'aptos_address',
+    description: 'Aptos address to check',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({ status: 200, description: 'Combined availability status' })
   async checkAvailability(
     @Query('username') username: string,
     @Query('aptos_address') aptosAddress: string,
@@ -60,6 +105,13 @@ export class UsersController {
   }
 
   @Get('check-referral-code')
+  @ApiOperation({ summary: 'Check if referral code is valid' })
+  @ApiQuery({
+    name: 'referral_code',
+    description: 'Referral code to check',
+    example: 'ref123456',
+  })
+  @ApiResponse({ status: 200, description: 'Referral code validation status' })
   async checkReferralCode(@Query('referral_code') referralCode: string) {
     if (!referralCode) {
       throw new Error('referral_code query parameter is required');
@@ -69,6 +121,14 @@ export class UsersController {
   }
 
   @Get('referral-code')
+  @ApiOperation({ summary: 'Get user referral code' })
+  @ApiQuery({
+    name: 'aptos_address',
+    description: 'Aptos address of the user',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({ status: 200, description: 'User referral information' })
   async getUserReferralCode(@Query('aptos_address') aptosAddress: string) {
     if (!aptosAddress) {
       throw new Error('aptos_address query parameter is required');
@@ -78,6 +138,13 @@ export class UsersController {
   }
 
   @Get('check-email')
+  @ApiOperation({ summary: 'Check if email is available' })
+  @ApiQuery({
+    name: 'email',
+    description: 'Email to check',
+    example: 'john@example.com',
+  })
+  @ApiResponse({ status: 200, description: 'Email availability status' })
   async checkEmailAvailability(@Query('email') email: string) {
     if (!email) {
       throw new Error('Email query parameter is required');
@@ -87,6 +154,32 @@ export class UsersController {
   }
 
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    schema: {
+      example: {
+        id: 'clx1234567890',
+        username: 'johndoe',
+        aptos_address:
+          '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        display_name: 'John Doe',
+        email: 'john@example.com',
+        profile_url: 'https://example.com/profile.jpg',
+        referral_code: 'ref123456',
+        referred_by: null,
+        referral_count: 0,
+        activity_points: 0,
+        created_at: '2024-01-01T00:00:00.000Z',
+        updated_at: '2024-01-01T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Username, Aptos address, or email already exists',
+  })
   async create(@Body(ValidationPipe) createUserDto: CreateUserDto) {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] 📝 REGISTRATION ATTEMPT:`, {
@@ -204,6 +297,20 @@ export class UsersController {
   }
 
   @Get('all')
+  @ApiOperation({ summary: 'Get all users with pagination' })
+  @ApiQuery({
+    name: 'skip',
+    description: 'Number of users to skip',
+    example: 0,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'take',
+    description: 'Number of users to return',
+    example: 50,
+    required: false,
+  })
+  @ApiResponse({ status: 200, description: 'List of users' })
   async findAll(@Query('skip') skip?: string, @Query('take') take?: string) {
     const skipNum = skip ? parseInt(skip, 10) : undefined;
     const takeNum = take ? parseInt(take, 10) : undefined;
@@ -212,6 +319,14 @@ export class UsersController {
   }
 
   @Get('username/:username')
+  @ApiOperation({ summary: 'Get user by username' })
+  @ApiParam({
+    name: 'username',
+    description: 'Username to find',
+    example: 'johndoe',
+  })
+  @ApiResponse({ status: 200, description: 'User information' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async findByUsername(@Param('username') username: string) {
     if (!username) {
       throw new Error('Username parameter is required');
@@ -221,6 +336,15 @@ export class UsersController {
   }
 
   @Get('address/:address')
+  @ApiOperation({ summary: 'Get user by Aptos address' })
+  @ApiParam({
+    name: 'address',
+    description: 'Aptos address to find',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({ status: 200, description: 'User information' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async findByAptosAddress(@Param('address') aptosAddress: string) {
     if (!aptosAddress) {
       throw new Error('Aptos address parameter is required');
@@ -229,6 +353,14 @@ export class UsersController {
   }
 
   @Get('referral-stats')
+  @ApiOperation({ summary: 'Get user referral statistics' })
+  @ApiQuery({
+    name: 'aptos_address',
+    description: 'Aptos address of the user',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({ status: 200, description: 'Referral statistics' })
   async getReferralStats(@Query('aptos_address') aptosAddress: string) {
     if (!aptosAddress) {
       throw new Error('aptos_address query parameter is required');
@@ -237,6 +369,9 @@ export class UsersController {
   }
 
   @Post('increment-points')
+  @ApiOperation({ summary: 'Increment user activity points' })
+  @ApiResponse({ status: 200, description: 'Points incremented successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async incrementPoints(
     @Body(ValidationPipe) updatePointsDto: UpdatePointsDto,
   ) {
@@ -244,6 +379,9 @@ export class UsersController {
   }
 
   @Post('decrement-points')
+  @ApiOperation({ summary: 'Decrement user activity points' })
+  @ApiResponse({ status: 200, description: 'Points decremented successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async decrementPoints(
     @Body(ValidationPipe) updatePointsDto: UpdatePointsDto,
   ) {
@@ -251,6 +389,31 @@ export class UsersController {
   }
 
   @Post('upload-profile-picture')
+  @ApiOperation({ summary: 'Upload user profile picture' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Profile picture file (max 5MB)',
+        },
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'aptos_address',
+    description: 'Aptos address of the user',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile picture uploaded successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @UseInterceptors(FileInterceptor('file'))
   async uploadProfilePicture(
     @Query('aptos_address') aptosAddress: string,
@@ -272,6 +435,31 @@ export class UsersController {
   }
 
   @Post('upload-header-picture')
+  @ApiOperation({ summary: 'Upload user header picture' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Header picture file (max 10MB)',
+        },
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'aptos_address',
+    description: 'Aptos address of the user',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Header picture uploaded successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @UseInterceptors(FileInterceptor('file'))
   async uploadHeaderPicture(
     @Query('aptos_address') aptosAddress: string,
@@ -293,6 +481,15 @@ export class UsersController {
   }
 
   @Get('profile/:address')
+  @ApiOperation({ summary: 'Get comprehensive user profile' })
+  @ApiParam({
+    name: 'address',
+    description: 'Aptos address of the user',
+    example:
+      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  })
+  @ApiResponse({ status: 200, description: 'User profile information' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async getUserProfile(@Param('address') aptosAddress: string) {
     if (!aptosAddress) {
       throw new Error('Aptos address parameter is required');
