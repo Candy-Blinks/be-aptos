@@ -29,6 +29,10 @@ import {
   ApiBody,
   ApiSecurity,
 } from '@nestjs/swagger';
+import { AptosAddressDto } from '../posts/dto/aptos-address.dto';
+import { FollowUserDto } from './dto/follow-user.dto';
+import { GetFollowersDto } from './dto/get-followers.dto';
+import { CheckFollowStatusDto } from './dto/check-follow-status.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -36,6 +40,57 @@ import {
 @ApiSecurity('api-key')
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+  @Get('followers')
+  @ApiOperation({ summary: 'Get user followers with pagination' })
+  @ApiResponse({ status: 200, description: 'List of followers' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserFollowers(
+    @Query(ValidationPipe) getFollowersDto: GetFollowersDto,
+  ) {
+    return this.usersService.getFollowers(
+      getFollowersDto.aptos_address,
+      getFollowersDto.take,
+      getFollowersDto.skip,
+    );
+  }
+
+  @Get('following')
+  @ApiOperation({
+    summary: 'Get users that this user is following with pagination',
+  })
+  @ApiResponse({ status: 200, description: 'List of following' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserFollowing(
+    @Query(ValidationPipe) getFollowersDto: GetFollowersDto,
+  ) {
+    return this.usersService.getFollowing(
+      getFollowersDto.aptos_address,
+      getFollowersDto.take,
+      getFollowersDto.skip,
+    );
+  }
+
+  @Get('follow-status')
+  @ApiOperation({ summary: 'Check if one user follows another' })
+  @ApiResponse({
+    status: 200,
+    description: 'Follow status',
+    schema: {
+      example: {
+        isFollowing: true,
+        follow_id: 'user123',
+      },
+    },
+  })
+  async getFollowStatus(
+    @Query(ValidationPipe) checkFollowStatusDto: CheckFollowStatusDto,
+  ) {
+    return this.usersService.checkFollowStatus(
+      checkFollowStatusDto.follower_aptos_address,
+      checkFollowStatusDto.following_aptos_address,
+    );
+  }
 
   @Get('check-username')
   @ApiOperation({ summary: 'Check if username is available' })
@@ -181,15 +236,6 @@ export class UsersController {
     description: 'Username, Aptos address, or email already exists',
   })
   async create(@Body(ValidationPipe) createUserDto: CreateUserDto) {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] 📝 REGISTRATION ATTEMPT:`, {
-      username: createUserDto.username,
-      aptos_address: createUserDto.aptos_address,
-      email: createUserDto.email || null,
-      has_referral_code: !!createUserDto.referral_code,
-      referral_code: createUserDto.referral_code || 'none',
-    });
-
     try {
       // Check if user already exists before attempting registration
       const existsCheck = await this.usersService.checkUserExists(
@@ -206,24 +252,12 @@ export class UsersController {
         };
 
         if (existsCheck.usernameExists && existsCheck.aptosAddressExists) {
-          console.log(
-            `[${timestamp}] ❌ REGISTRATION FAILED - Both username and aptos address exist:`,
-            errorDetails,
-          );
           throw new ConflictException(
             'Both username and aptos address are already registered',
           );
         } else if (existsCheck.usernameExists) {
-          console.log(
-            `[${timestamp}] ❌ REGISTRATION FAILED - Username exists:`,
-            errorDetails,
-          );
           throw new ConflictException('Username is already taken');
         } else if (existsCheck.aptosAddressExists) {
-          console.log(
-            `[${timestamp}] ❌ REGISTRATION FAILED - Aptos address exists:`,
-            errorDetails,
-          );
           throw new ConflictException('Aptos address is already registered');
         }
       }
@@ -234,10 +268,6 @@ export class UsersController {
           createUserDto.email,
         );
         if (!emailCheck.available) {
-          console.log(`[${timestamp}] ❌ REGISTRATION FAILED - Email exists:`, {
-            username: createUserDto.username,
-            email: createUserDto.email,
-          });
           throw new ConflictException('Email is already registered');
         }
       }
@@ -249,49 +279,16 @@ export class UsersController {
         );
 
         if (!referralCheck.exists) {
-          console.log(
-            `[${timestamp}] ❌ REGISTRATION FAILED - Invalid referral code:`,
-            {
-              username: createUserDto.username,
-              referral_code: createUserDto.referral_code,
-              error: referralCheck.message,
-            },
-          );
           throw new ConflictException(referralCheck.message);
-        } else {
-          console.log(`[${timestamp}] ✅ REFERRAL CODE VALIDATED:`, {
-            username: createUserDto.username,
-            referral_code: createUserDto.referral_code,
-            referrer: referralCheck.referrer?.username,
-          });
         }
       }
 
       // Attempt to create the user
       const newUser = await this.usersService.create(createUserDto);
 
-      console.log(`[${timestamp}] ✅ REGISTRATION SUCCESS:`, {
-        user_id: newUser.id,
-        username: newUser.username,
-        aptos_address: newUser.aptos_address,
-        email: newUser.email || null,
-        referred_by: newUser.referred_by || 'none',
-        referral_code: newUser.referral_code,
-      });
-
       return newUser;
     } catch (error) {
-      console.log(`[${timestamp}] 💥 REGISTRATION ERROR:`, {
-        username: createUserDto.username,
-        aptos_address: createUserDto.aptos_address,
-        error_type: error instanceof Error ? error.constructor.name : 'unknown',
-        error_message: error instanceof Error ? error.message : String(error),
-        error_status:
-          typeof error === 'object' && error && 'status' in error
-            ? String((error as { status: unknown }).status)
-            : 'unknown',
-      });
-
+      // Re-throw the error to be handled by the global exception filter
       throw error;
     }
   }
@@ -388,6 +385,22 @@ export class UsersController {
     return this.usersService.decrementPoints(updatePointsDto);
   }
 
+  @Post('follow')
+  @ApiOperation({ summary: 'Follow a user' })
+  @ApiResponse({ status: 200, description: 'User followed successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async follow(@Body(ValidationPipe) followUserDto: FollowUserDto) {
+    return this.usersService.follow(followUserDto);
+  }
+
+  @Post('unfollow')
+  @ApiOperation({ summary: 'Unfollow a user' })
+  @ApiResponse({ status: 200, description: 'User unfollowed successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async unfollow(@Body(ValidationPipe) followUserDto: FollowUserDto) {
+    return this.usersService.unfollow(followUserDto);
+  }
+
   @Post('upload-profile-picture')
   @ApiOperation({ summary: 'Upload user profile picture' })
   @ApiConsumes('multipart/form-data')
@@ -478,6 +491,19 @@ export class UsersController {
     }
 
     return this.usersService.updateHeaderPicture(aptosAddress, file);
+  }
+
+  @Post('complete-onboarding')
+  @ApiOperation({ summary: 'Mark user onboarding as complete' })
+  @ApiResponse({
+    status: 200,
+    description: 'Onboarding completed successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async completeOnboarding(
+    @Body(ValidationPipe) aptosAddressDto: AptosAddressDto,
+  ) {
+    return this.usersService.completeOnboarding(aptosAddressDto.aptos_address);
   }
 
   @Get('profile/:address')
