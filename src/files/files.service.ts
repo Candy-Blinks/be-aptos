@@ -40,9 +40,10 @@ export class FilesService {
 
       return result.secure_url;
     } catch (error) {
-      console.log('Cloudinary upload error:', error);
       throw new Error(
-        `Failed to upload image to Cloudinary: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to upload image to Cloudinary: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
     }
   }
