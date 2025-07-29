@@ -8,7 +8,7 @@ import {
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GetFeedDto {
+export class GetFollowingFeedDto {
   @ApiProperty({
     description:
       'Aptos blockchain wallet address of the user requesting the feed',
