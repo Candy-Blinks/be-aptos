@@ -16,14 +16,65 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { FilesService } from './files.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiParam,
+  ApiConsumes,
+  ApiBody,
+  ApiSecurity,
+} from '@nestjs/swagger';
 
+@ApiTags('files')
 @Controller('files')
 @UseGuards(ApiKeyGuard)
+@ApiSecurity('api-key')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post('upload-single')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a single file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiQuery({
+    name: 'folder',
+    description: 'Folder to upload to (default: general)',
+    example: 'posts',
+    required: false,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description:
+            'File to upload (max 10MB, supported: jpg, jpeg, png, webp, gif)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'File uploaded successfully',
+    schema: {
+      example: {
+        success: true,
+        url: 'https://res.cloudinary.com/example/image/upload/v1234567890/social-media/posts/image.jpg',
+        message: 'File uploaded successfully',
+        fileInfo: {
+          originalName: 'image.jpg',
+          size: 1024000,
+          mimetype: 'image/jpeg',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid file or upload failed' })
   async uploadSingle(
     @Query('folder') folder: string = 'general',
     @UploadedFile(
@@ -71,6 +122,47 @@ export class FilesController {
 
   @Post('upload-multiple')
   @UseInterceptors(FilesInterceptor('files', 10)) // Max 10 files
+  @ApiOperation({ summary: 'Upload multiple files' })
+  @ApiConsumes('multipart/form-data')
+  @ApiQuery({
+    name: 'folder',
+    description: 'Folder to upload to (default: general)',
+    example: 'posts',
+    required: false,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          description:
+            'Files to upload (max 10 files, 5MB each, supported: jpg, jpeg, png, webp, gif)',
+        },
+      },
+      required: ['files'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Files uploaded successfully',
+    schema: {
+      example: {
+        success: true,
+        urls: [
+          'https://res.cloudinary.com/example/image/upload/v1234567890/social-media/posts/image1.jpg',
+          'https://res.cloudinary.com/example/image/upload/v1234567890/social-media/posts/image2.jpg',
+        ],
+        count: 2,
+        message: '2 files uploaded successfully',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid files or upload failed' })
   async uploadMultiple(
     @Query('folder') folder: string = 'general',
     @UploadedFiles(
@@ -107,6 +199,23 @@ export class FilesController {
   }
 
   @Delete('delete/:publicId')
+  @ApiOperation({ summary: 'Delete a file by public ID' })
+  @ApiParam({
+    name: 'publicId',
+    description: 'Cloudinary public ID of the file to delete',
+    example: 'social-media/posts/image123',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'File deleted successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'File deleted successfully',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Delete failed' })
   async deleteFile(@Param('publicId') publicId: string) {
     try {
       await this.filesService.deleteImage(publicId);
@@ -122,6 +231,25 @@ export class FilesController {
   }
 
   @Post('extract-public-id')
+  @ApiOperation({ summary: 'Extract public ID from Cloudinary URL' })
+  @ApiQuery({
+    name: 'url',
+    description: 'Cloudinary URL to extract public ID from',
+    example:
+      'https://res.cloudinary.com/example/image/upload/v1234567890/social-media/posts/image.jpg',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Public ID extracted successfully',
+    schema: {
+      example: {
+        success: true,
+        publicId: 'social-media/posts/image',
+        url: 'https://res.cloudinary.com/example/image/upload/v1234567890/social-media/posts/image.jpg',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Failed to extract public ID' })
   extractPublicId(@Query('url') url: string) {
     if (!url) {
       throw new BadRequestException('URL parameter is required');
