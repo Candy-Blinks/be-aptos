@@ -24,9 +24,9 @@ describe('UsersController', () => {
         },
       ],
     })
-    .overrideGuard(require('../auth/guards/api-key.guard').ApiKeyGuard)
-    .useValue({ canActivate: () => true })
-    .compile();
+      .overrideGuard(require('../auth/guards/api-key.guard').ApiKeyGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<UsersController>(UsersController);
     usersService = module.get<UsersService>(UsersService);
@@ -55,29 +55,41 @@ describe('UsersController', () => {
     });
 
     it('should handle service errors', async () => {
-      (usersService.create as jest.Mock).mockRejectedValue(new Error('Service error'));
+      (usersService.create as jest.Mock).mockRejectedValue(
+        new Error('Service error'),
+      );
 
-      await expect(controller.create(createUserDto)).rejects.toThrow('Service error');
+      await expect(controller.create(createUserDto)).rejects.toThrow(
+        'Service error',
+      );
     });
   });
 
   describe('findByAptosAddress', () => {
     it('should find user by aptos address successfully', async () => {
       const mockUser = TestUtils.createMockUser();
-      (usersService.findByAptosAddress as jest.Mock).mockResolvedValue(mockUser);
+      (usersService.findByAptosAddress as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
 
       const result = await controller.findByAptosAddress('test-aptos-address');
 
-      expect(usersService.findByAptosAddress).toHaveBeenCalledWith('test-aptos-address');
+      expect(usersService.findByAptosAddress).toHaveBeenCalledWith(
+        'test-aptos-address',
+      );
       expect(result).toEqual(mockUser);
     });
 
     it('should throw error when aptos_address is missing', async () => {
-      await expect(controller.findByAptosAddress('')).rejects.toThrow('aptos_address query parameter is required');
+      await expect(controller.findByAptosAddress('')).rejects.toThrow(
+        'aptos_address query parameter is required',
+      );
     });
 
     it('should throw error when aptos_address is undefined', async () => {
-      await expect(controller.findByAptosAddress(undefined as any)).rejects.toThrow('aptos_address query parameter is required');
+      await expect(
+        controller.findByAptosAddress(undefined as any),
+      ).rejects.toThrow('aptos_address query parameter is required');
     });
   });
 
@@ -93,14 +105,20 @@ describe('UsersController', () => {
 
       const result = await controller.incrementPoints(updatePointsDto);
 
-      expect(usersService.incrementPoints).toHaveBeenCalledWith(updatePointsDto);
+      expect(usersService.incrementPoints).toHaveBeenCalledWith(
+        updatePointsDto,
+      );
       expect(result).toEqual(mockUser);
     });
 
     it('should handle service errors', async () => {
-      (usersService.incrementPoints as jest.Mock).mockRejectedValue(new Error('Service error'));
+      (usersService.incrementPoints as jest.Mock).mockRejectedValue(
+        new Error('Service error'),
+      );
 
-      await expect(controller.incrementPoints(updatePointsDto)).rejects.toThrow('Service error');
+      await expect(controller.incrementPoints(updatePointsDto)).rejects.toThrow(
+        'Service error',
+      );
     });
   });
 
@@ -116,14 +134,20 @@ describe('UsersController', () => {
 
       const result = await controller.decrementPoints(updatePointsDto);
 
-      expect(usersService.decrementPoints).toHaveBeenCalledWith(updatePointsDto);
+      expect(usersService.decrementPoints).toHaveBeenCalledWith(
+        updatePointsDto,
+      );
       expect(result).toEqual(mockUser);
     });
 
     it('should handle service errors', async () => {
-      (usersService.decrementPoints as jest.Mock).mockRejectedValue(new Error('Service error'));
+      (usersService.decrementPoints as jest.Mock).mockRejectedValue(
+        new Error('Service error'),
+      );
 
-      await expect(controller.decrementPoints(updatePointsDto)).rejects.toThrow('Service error');
+      await expect(controller.decrementPoints(updatePointsDto)).rejects.toThrow(
+        'Service error',
+      );
     });
   });
 });

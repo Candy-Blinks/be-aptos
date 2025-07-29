@@ -8,6 +8,7 @@ import { FilesService } from '../files/files.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePointsDto } from './dto/update-points.dto';
 import { User } from '@prisma/client';
+import { FollowUserDto } from './dto/follow-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +16,143 @@ export class UsersService {
     private prisma: PrismaService,
     private filesService: FilesService,
   ) {}
+
+  async getFollowers(
+    aptosAddress: string,
+    take: number = 20,
+    skip: number = 0,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { aptos_address: aptosAddress },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const followers = await this.prisma.follower.findMany({
+      where: {
+        following_id: user.id, // Users who follow this user
+      },
+      include: {
+        follower: {
+          select: {
+            id: true,
+            username: true,
+            aptos_address: true,
+            display_name: true,
+            profile_url: true,
+            bio: true,
+            activity_points: true,
+            created_at: true,
+            _count: {
+              select: {
+                followers: true,
+                following: true,
+                posts: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      take,
+      skip,
+    });
+
+    return followers.map((f) => ({
+      follower_id: f.follower_id,
+      following_id: f.following_id,
+      created_at: f.created_at,
+      follower: f.follower,
+    }));
+  }
+
+  async getFollowing(
+    aptosAddress: string,
+    take: number = 20,
+    skip: number = 0,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { aptos_address: aptosAddress },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const following = await this.prisma.follower.findMany({
+      where: {
+        follower_id: user.id, // Users this user follows
+      },
+      include: {
+        following: {
+          select: {
+            id: true,
+            username: true,
+            aptos_address: true,
+            display_name: true,
+            profile_url: true,
+            bio: true,
+            activity_points: true,
+            created_at: true,
+            _count: {
+              select: {
+                followers: true,
+                following: true,
+                posts: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      take,
+      skip,
+    });
+
+    return following.map((f) => ({
+      follower_id: f.follower_id,
+      following_id: f.following_id,
+      created_at: f.created_at,
+      following: f.following,
+    }));
+  }
+
+  async checkFollowStatus(
+    followerAptosAddress: string,
+    followingAptosAddress: string,
+  ) {
+    if (followerAptosAddress === followingAptosAddress) {
+      return { isFollowing: false };
+    }
+
+    const follower = await this.prisma.user.findUnique({
+      where: { aptos_address: followerAptosAddress },
+    });
+
+    const following = await this.prisma.user.findUnique({
+      where: { aptos_address: followingAptosAddress },
+    });
+
+    if (!follower || !following) {
+      return { isFollowing: false };
+    }
+
+    const followRelation = await this.prisma.follower.findUnique({
+      where: {
+        follower_id_following_id: {
+          follower_id: follower.id,
+          following_id: following.id,
+        },
+      },
+    });
+
+    return {
+      isFollowing: !!followRelation,
+      follow_id: followRelation?.follower_id || undefined,
+    };
+  }
 
   async updateProfilePicture(
     aptosAddress: string,
@@ -235,6 +373,7 @@ export class UsersService {
           email: createUserDto.email || null,
           profile_url: createUserDto.profile_url || null,
           referred_by: referredBy,
+          is_new_user: true,
           socials: {
             website: '',
             x: '',
@@ -574,5 +713,105 @@ export class UsersService {
       available: !existingUser,
       email: email,
     };
+  }
+
+  async completeOnboarding(aptosAddress: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { aptos_address: aptosAddress },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.prisma.user.update({
+      where: { aptos_address: aptosAddress },
+      data: {
+        onboarding_completed: true,
+        is_new_user: false,
+      },
+    });
+  }
+
+  async follow(followUserDto: FollowUserDto): Promise<{ followed: boolean }> {
+    const follower = await this.prisma.user.findUnique({
+      where: { aptos_address: followUserDto.follower_aptos_address },
+    });
+    if (!follower) {
+      throw new NotFoundException('Follower not found');
+    }
+
+    const following = await this.prisma.user.findUnique({
+      where: { aptos_address: followUserDto.following_aptos_address },
+    });
+    if (!following) {
+      throw new NotFoundException('User to follow not found');
+    }
+
+    const existingFollow = await this.prisma.follower.findUnique({
+      where: {
+        follower_id_following_id: {
+          follower_id: follower.id,
+          following_id: following.id,
+        },
+      },
+    });
+
+    if (existingFollow) {
+      // Already following, do nothing
+      return { followed: true };
+    }
+
+    await this.prisma.follower.create({
+      data: {
+        follower_id: follower.id,
+        following_id: following.id,
+      },
+    });
+
+    return { followed: true };
+  }
+
+  async unfollow(
+    followUserDto: FollowUserDto,
+  ): Promise<{ unfollowed: boolean }> {
+    const follower = await this.prisma.user.findUnique({
+      where: { aptos_address: followUserDto.follower_aptos_address },
+    });
+    if (!follower) {
+      throw new NotFoundException('Follower not found');
+    }
+
+    const following = await this.prisma.user.findUnique({
+      where: { aptos_address: followUserDto.following_aptos_address },
+    });
+    if (!following) {
+      throw new NotFoundException('User to unfollow not found');
+    }
+
+    const existingFollow = await this.prisma.follower.findUnique({
+      where: {
+        follower_id_following_id: {
+          follower_id: follower.id,
+          following_id: following.id,
+        },
+      },
+    });
+
+    if (!existingFollow) {
+      // Not following, do nothing
+      return { unfollowed: true };
+    }
+
+    await this.prisma.follower.delete({
+      where: {
+        follower_id_following_id: {
+          follower_id: follower.id,
+          following_id: following.id,
+        },
+      },
+    });
+
+    return { unfollowed: true };
   }
 }
