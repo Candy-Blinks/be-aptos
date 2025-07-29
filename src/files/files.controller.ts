@@ -88,15 +88,6 @@ export class FilesController {
     )
     file: Express.Multer.File,
   ) {
-    console.log('Upload request received:', {
-      originalName: file?.originalname,
-      mimetype: file?.mimetype,
-      size: file?.size,
-      hasBuffer: !!file?.buffer,
-      hasPath: !!file?.path,
-      folder,
-    });
-
     if (!file) {
       throw new BadRequestException('No file provided');
     }
