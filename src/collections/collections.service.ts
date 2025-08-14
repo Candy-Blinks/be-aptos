@@ -4,8 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 export interface Collection {
   collection_name: string;
@@ -24,7 +23,7 @@ export interface Collection {
 export class CollectionsService {
   private readonly logger = new Logger(CollectionsService.name);
 
-  constructor(private prisma: PrismaClient) {} // Injected globally
+  constructor(private prisma: PrismaService) {}
 
   async getOwnedCollections(owner: string): Promise<Collection[]> {
     this.logger.debug(`Fetching collections for owner: ${owner}`);
@@ -36,9 +35,12 @@ export class CollectionsService {
       });
       return collections;
     } catch (error) {
-      this.logger.error('Failed to fetch collections', error.stack);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error('Failed to fetch collections', errorStack);
       throw new InternalServerErrorException(
-        `Failed to fetch collections: ${error.message}`,
+        `Failed to fetch collections: ${errorMessage}`,
       );
     }
   }
@@ -68,9 +70,35 @@ export class CollectionsService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error('Failed to fetch collection', error.stack);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error('Failed to fetch collection', errorStack);
       throw new InternalServerErrorException(
-        `Failed to fetch collection: ${error.message}`,
+        `Failed to fetch collection: ${errorMessage}`,
+      );
+    }
+  }
+
+  async getCollections(): Promise<Collection[]> {
+    this.logger.debug('Fetching all collections');
+    try {
+      const collections = await this.prisma.collection.findMany();
+
+      if (!collections) {
+        throw new NotFoundException('No collections found');
+      }
+      return collections;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error('Failed to fetch collection', errorStack);
+      throw new InternalServerErrorException(
+        `Failed to fetch collection: ${errorMessage}`,
       );
     }
   }
